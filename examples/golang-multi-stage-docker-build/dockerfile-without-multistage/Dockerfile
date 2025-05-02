@@ -2,9 +2,11 @@
 # BASE IMAGE
 ###########################################
 
-FROM ubuntu AS build
 
-RUN apt-get update && apt-get install -y golang-go
+
+FROM openjdk:11
+
+RUN javac Main.java
 
 ENV GO111MODULE=off
 
