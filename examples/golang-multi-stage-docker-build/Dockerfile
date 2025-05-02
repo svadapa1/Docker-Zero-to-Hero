@@ -2,25 +2,33 @@
 # BASE IMAGE
 ###########################################
 
-FROM ubuntu AS build
+###########################################
+# STAGE 1: Build the Java application
+###########################################
 
-RUN apt-get update && apt-get install -y golang-go
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 
-ENV GO111MODULE=off
+# Set the working directory
+WORKDIR /app
 
+# Copy the project files
 COPY . .
 
-RUN CGO_ENABLED=0 go build -o /app .
+# Build the application
+RUN mvn clean package -DskipTests
 
-############################################
-# HERE STARTS THE MAGIC OF MULTI STAGE BUILD
-############################################
+###########################################
+# STAGE 2: Run the Java application
+###########################################
 
-FROM scratch
+FROM eclipse-temurin:17-jre
 
-# Copy the compiled binary from the build stage
-COPY --from=build /app /app
+# Set the working directory
+WORKDIR /app
 
-# Set the entrypoint for the container to run the binary
-ENTRYPOINT ["/app"]
+# Copy the built JAR from the build stage
+COPY --from=build /app/target/*.jar app.jar
+
+# Set the entrypoint
+ENTRYPOINT ["java", "-jar", "app.jar"]
 
